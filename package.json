@@ -1,5 +1,5 @@
 {
-  "name": "@w-10-m/airtable-mcp",
+  "name": "@west10tech/airtable-mcp",
   "version": "0.0.0-development",
   "description": "MCP server with Airtable integration",
   "type": "module",
