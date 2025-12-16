@@ -1,6 +1,6 @@
 {
   "name": "@west10tech/airtable-mcp",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "MCP server with Airtable integration",
   "type": "module",
   "main": "dist/index.js",
