@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/w-10-m/airtable-mcp/compare/v1.0.0...v1.1.0) (2025-12-17)
+
+
+### Features
+
+* add OIDC npm publishing with provenance ([717c112](https://github.com/w-10-m/airtable-mcp/commit/717c1123476712daacb203b5230aa59eb92471be))
+
 # 1.0.0 (2025-12-16)
 
 
