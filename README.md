@@ -1,6 +1,10 @@
 # airtable-mcp
 
-MCP server with Airtable integration for GitHub publishing
+[![npm version](https://img.shields.io/npm/v/@west10tech/airtable-mcp.svg)](https://www.npmjs.com/package/@west10tech/airtable-mcp)
+
+MCP server with Airtable integration
+
+**npm:** https://www.npmjs.com/package/@west10tech/airtable-mcp
 
 This MCP server was generated using the Template Orchestrator and includes the following integrations:
 
@@ -31,7 +35,7 @@ This MCP server provides 18 tools across 1 integrations:
 ## Installation
 
 ```bash
-npm install airtable-mcp-airtable-github-publish-test
+npm install @west10tech/airtable-mcp
 ```
 
 ## Environment Setup
@@ -63,7 +67,7 @@ Add this to your Claude Desktop configuration:
   "mcpServers": {
     "airtable-mcp": {
       "command": "npx",
-      "args": ["airtable-mcp-airtable-github-publish-test"],
+      "args": ["@west10tech/airtable-mcp"],
       "env": {
         "AIRTABLE_ACCESS_TOKEN": "your_airtable_access_token_here"
       }
