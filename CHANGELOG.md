@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/w-10-m/airtable-mcp/compare/v1.1.0...v1.1.1) (2025-12-23)
+
+
+### Bug Fixes
+
+* update README with correct package information ([43985df](https://github.com/w-10-m/airtable-mcp/commit/43985df78914886ffbff788553cf495bf0d9d25d))
+
 # [1.1.0](https://github.com/w-10-m/airtable-mcp/compare/v1.0.0...v1.1.0) (2025-12-17)
 
 
