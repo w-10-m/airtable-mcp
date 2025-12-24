@@ -1,7 +1,7 @@
 # airtable-mcp
 
 [![npm version](https://img.shields.io/npm/v/@west10tech/airtable-mcp.svg)](https://www.npmjs.com/package/@west10tech/airtable-mcp)
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/w-10-m/COVERAGE_GIST_ID/raw/coverage.json)]()
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/gcaliene/1752a85359f7cb8f5d2ad131b093eeba/raw/coverage.json)]()
 
 MCP server with Airtable integration
 
