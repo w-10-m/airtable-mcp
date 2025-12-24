@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/w-10-m/airtable-mcp/compare/v1.1.1...v1.2.0) (2025-12-24)
+
+
+### Features
+
+* add unit tests with coverage reporting ([ad10cdc](https://github.com/w-10-m/airtable-mcp/commit/ad10cdce0c39a9687931dd1eb40f3d41657e63de))
+
 ## [1.1.1](https://github.com/w-10-m/airtable-mcp/compare/v1.1.0...v1.1.1) (2025-12-23)
 
 
