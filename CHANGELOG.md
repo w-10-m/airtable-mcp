@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/w-10-m/airtable-mcp/compare/v1.3.0...v1.4.0) (2025-12-24)
+
+
+### Features
+
+* improve test coverage to 93%+ ([f068576](https://github.com/w-10-m/airtable-mcp/commit/f068576083a7593ab2fd51b3e32df85c7cc90dc6))
+
 # [1.3.0](https://github.com/w-10-m/airtable-mcp/compare/v1.2.0...v1.3.0) (2025-12-24)
 
 
