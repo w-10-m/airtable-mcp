@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/w-10-m/airtable-mcp/compare/v1.4.0...v1.5.0) (2025-12-25)
+
+
+### Features
+
+* add E2E test infrastructure ([45f6fa0](https://github.com/w-10-m/airtable-mcp/commit/45f6fa0d388229ee60b855e6c24f4f56b9f0a1fc))
+
 # [1.4.0](https://github.com/w-10-m/airtable-mcp/compare/v1.3.0...v1.4.0) (2025-12-24)
 
 
