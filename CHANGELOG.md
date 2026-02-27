@@ -1,3 +1,11 @@
+# [1.6.0](https://github.com/w-10-m/airtable-mcp/compare/v1.5.1...v1.6.0) (2026-02-27)
+
+
+### Features
+
+* add batch expansion, upsert, comments, attachments, and detail level control ([d7642a6](https://github.com/w-10-m/airtable-mcp/commit/d7642a67fe131359c61b232a5531c775430fc999))
+* add field selection to get_record and new search_records tool ([78a6c05](https://github.com/w-10-m/airtable-mcp/commit/78a6c05a34b904d5177068dac588681a89228cc9))
+
 ## [1.5.1](https://github.com/w-10-m/airtable-mcp/compare/v1.5.0...v1.5.1) (2026-02-27)
 
 
