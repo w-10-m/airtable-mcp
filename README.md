@@ -7,31 +7,53 @@ MCP server with Airtable integration
 
 **npm:** https://www.npmjs.com/package/@west10tech/airtable-mcp
 
-This MCP server was generated using the Template Orchestrator and includes the following integrations:
-
 ## Available Tools
 
-This MCP server provides 18 tools across 1 integrations:
+This MCP server provides 30 tools:
 
-### Airtable Tools
-- **airtable_list_bases**: List all bases
-- **airtable_get_base_schema**: Get base schema including tables and fields
-- **airtable_list_records**: List records in a table
-- **airtable_get_record**: Get a specific record
-- **airtable_create_records**: Create new records (up to 10 at once)
-- **airtable_update_records**: Update existing records (up to 10 at once)
-- **airtable_replace_records**: Replace records completely (up to 10 at once)
-- **airtable_delete_records**: Delete records (up to 10 at once)
-- **airtable_get_table**: Get table schema
-- **airtable_create_table**: Create a new table
-- **airtable_update_table**: Update table properties
-- **airtable_create_field**: Create a new field in a table
-- **airtable_update_field**: Update a field
-- **airtable_list_views**: List views in a table
-- **airtable_get_view**: Get view details
-- **airtable_create_view**: Create a new view
-- **airtable_update_view**: Update a view
-- **airtable_delete_view**: Delete a view
+### Bases
+- **airtable_list_bases** — List all bases
+- **airtable_get_base_schema** — Get base schema including tables and fields
+
+### Records
+- **airtable_list_records** — List records in a table
+- **airtable_get_record** — Get a specific record
+- **airtable_search_records** — Search records by text across specified fields
+- **airtable_create_records** — Create new records (up to 100, auto-batched in groups of 10)
+- **airtable_update_records** — Update existing records (up to 100, auto-batched)
+- **airtable_replace_records** — Replace records completely (up to 100, auto-batched)
+- **airtable_delete_records** — Delete records (up to 100, auto-batched)
+- **airtable_upsert_records** — Upsert records based on merge fields (up to 100, auto-batched)
+
+### Tables & Fields
+- **airtable_get_table** — Get table schema
+- **airtable_create_table** — Create a new table
+- **airtable_update_table** — Update table properties
+- **airtable_create_field** — Create a new field in a table
+- **airtable_update_field** — Update a field
+
+### Views
+- **airtable_list_views** — List views in a table
+- **airtable_get_view** — Get view details
+- **airtable_create_view** — Create a new view
+- **airtable_update_view** — Update a view
+- **airtable_delete_view** — Delete a view
+
+### Comments
+- **airtable_list_comments** — List comments on a record
+- **airtable_create_comment** — Create a comment on a record
+- **airtable_update_comment** — Update a comment
+- **airtable_delete_comment** — Delete a comment
+
+### Attachments
+- **airtable_upload_attachment** — Upload a file attachment to a base
+
+### Webhooks
+- **airtable_list_webhooks** — List all webhooks for a base
+- **airtable_create_webhook** — Create a webhook for base change notifications
+- **airtable_delete_webhook** — Delete a webhook
+- **airtable_refresh_webhook** — Refresh a webhook to extend its expiration
+- **airtable_list_webhook_payloads** — List payloads for a webhook (cursor-based)
 
 ## Installation
 
@@ -49,7 +71,9 @@ AIRTABLE_ACCESS_TOKEN=your_airtable_access_token_here
 
 ## Usage
 
-### Running the server
+### Running the server (stdio)
+
+The default transport is stdio, used by MCP clients like Claude Desktop and Claude Code.
 
 ```bash
 # Development mode
@@ -59,7 +83,26 @@ npm run dev
 npm run build && npm start
 ```
 
-### Using with Claude Desktop
+### Running the server (HTTP)
+
+Run the server as a standalone HTTP service using the Streamable HTTP transport:
+
+```bash
+# Via environment variable
+MCP_TRANSPORT=http node dist/index.js
+
+# Via CLI flag
+node dist/index.js --http
+
+# Custom port (default: 3000)
+MCP_HTTP_PORT=8080 MCP_TRANSPORT=http node dist/index.js
+```
+
+Endpoints:
+- `POST /mcp` — MCP JSON-RPC endpoint (Streamable HTTP)
+- `GET /health` — Health check
+
+### Using with Claude Desktop (stdio)
 
 Add this to your Claude Desktop configuration:
 
@@ -77,55 +120,66 @@ Add this to your Claude Desktop configuration:
 }
 ```
 
-## Instructions for Fetching API Keys/Tokens
-- **COMING SOON**
+### Using with Claude Code
+
+Add the MCP server to your Claude Code configuration:
+
+```json
+{
+  "mcpServers": {
+    "airtable": {
+      "command": "npx",
+      "args": ["@west10tech/airtable-mcp"],
+      "env": {
+        "AIRTABLE_ACCESS_TOKEN": "your_airtable_access_token_here"
+      }
+    }
+  }
+}
+```
+
+### Using with an HTTP client
+
+When running in HTTP mode, any MCP-compatible client can connect:
+
+```json
+{
+  "mcpServers": {
+    "airtable": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+## Tool Annotations
+
+All tools include MCP annotations to help clients understand operation safety:
+
+| Annotation | Meaning |
+|-----------|---------|
+| `readOnlyHint: true` | Tool only reads data, no side effects |
+| `destructiveHint: true` | Tool permanently deletes or overwrites data |
+| `idempotentHint: true` | Repeating the call with same args has no additional effect |
+
+Clients like Claude Desktop can use these to warn before destructive operations (e.g., `delete_records`, `delete_view`, `delete_webhook`).
 
 ## Advanced Features
 
 ### Request Cancellation
 
-This MCP server supports request cancellation according to the [MCP cancellation specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/cancellation). Clients can cancel in-progress requests by sending a `notifications/cancelled` message with the request ID.
-
-When a request is cancelled:
-- The server immediately stops processing the request
-- Any ongoing API calls are aborted
-- Resources are cleaned up
-- No response is sent for the cancelled request
+Supports request cancellation per the [MCP cancellation spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/cancellation). Clients can cancel in-progress requests by sending a `notifications/cancelled` message.
 
 ### Progress Notifications
 
-The server supports progress notifications for long-running operations according to the [MCP progress specification](https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/progress). 
+Supports progress notifications for long-running operations per the [MCP progress spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/progress).
 
-To receive progress updates:
-1. Include a `progressToken` in your request metadata
-2. The server will send `notifications/progress` messages with:
-   - Current progress value
-   - Total value (when known)
-   - Human-readable status messages
+To receive progress updates, include a `progressToken` in your request metadata. The server sends `notifications/progress` messages with current progress, total, and status messages.
 
-Progress is reported for:
-- Multi-step operations
-- Batch processing
-- Long-running API calls
-- File uploads/downloads
+### Detail Level Control
 
-Example progress notification:
-```json
-{
-  "method": "notifications/progress",
-  "params": {
-    "progressToken": "operation-123",
-    "progress": 45,
-    "total": 100,
-    "message": "Processing item 45 of 100..."
-  }
-}
-```
+Several read tools support a `detail_level` parameter (`full`, `summary`, `ids_only`) to control response verbosity and reduce token usage:
 
-## Generated Information
-
-- **Generated at**: Wed Nov 26 2025 01:18:28 GMT-0500 (Eastern Standard Time)
-- **Orchestrator version**: 0.0.2
-- **Template repository**: Coretext-AI-Dev/server-template-v2
-- **Total endpoints**: 18
-
+- `full` — Complete response (default)
+- `summary` — Key fields only (id, name, primary field)
+- `ids_only` — Just record/table IDs
