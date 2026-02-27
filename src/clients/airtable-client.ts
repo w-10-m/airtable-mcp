@@ -310,6 +310,14 @@ export class AirtableClient {
     return path;
   }
 
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
+  }
+
   /* DEBUG: endpoint={"name":"list_bases","method":"GET","path":"/meta/bases","description":"List all bases","parameters":{"offset":{"type":"string","required":false,"description":"Pagination offset","location":"query"}},"response_format":"json","category":"Base Configuration"} */
   async listBases(params: any, options?: RequestOptions): Promise<any> {
     const startTime = Date.now();
@@ -996,15 +1004,44 @@ export class AirtableClient {
           message: `Starting create_records request...`
         });
       }
-      
+
       // Use standard HTTP client for other auth types with abort signal
       const requestConfig: any = {};
       if (options?.signal) {
         requestConfig.signal = options.signal;
       }
-      
-      const response = await this.httpClient.post(requestPath, hasRawArrayBody ? rawBodyData : (Object.keys(bodyParams).length > 0 ? bodyParams : undefined), { params: queryParams, ...requestConfig });
-      
+
+      // Batch records in chunks of 10 (Airtable API limit per request)
+      const records = bodyParams.records || [];
+      if (records.length > 100) {
+        throw new Error('Cannot create more than 100 records at once');
+      }
+      const chunks = this.chunkArray(records, 10);
+      const allRecords: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        if (options?.onProgress) {
+          await options.onProgress({
+            progress: Math.round((i / chunks.length) * 100),
+            total: 100,
+            message: `Creating records batch ${i + 1} of ${chunks.length}...`
+          });
+        }
+        try {
+          const chunkBody = { ...bodyParams, records: chunks[i] };
+          const response = await this.httpClient.post(requestPath, chunkBody, { params: queryParams, ...requestConfig });
+          allRecords.push(...(response.data.records || []));
+        } catch (chunkError) {
+          if (axios.isCancel(chunkError)) throw chunkError;
+          errors.push(`Batch ${i + 1}: ${chunkError instanceof Error ? chunkError.message : String(chunkError)}`);
+        }
+      }
+
+      if (allRecords.length === 0 && errors.length > 0) {
+        throw new Error(`All batches failed: ${errors.join('; ')}`);
+      }
+
       // Report completion progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1013,27 +1050,34 @@ export class AirtableClient {
           message: `Completed create_records request`
         });
       }
-      
+
       const duration = Date.now() - startTime;
+      const resultData: any = { records: allRecords };
+      if (errors.length > 0) {
+        resultData.errors = errors;
+      }
       this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
         endpoint: 'create_records',
         method: 'POST',
         path: '/{base_id}/{table_id_or_name}',
         duration_ms: duration,
-        responseDataSize: JSON.stringify(response.data).length
+        responseDataSize: JSON.stringify(resultData).length,
+        batchCount: chunks.length,
+        totalRecords: allRecords.length,
+        errorCount: errors.length
       });
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(response.data, null, 2)
+            text: JSON.stringify(resultData, null, 2)
           }
         ]
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // Check if error is due to cancellation
       if (axios.isCancel(error)) {
         this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', {
@@ -1044,7 +1088,7 @@ export class AirtableClient {
         });
         throw new Error('Request was cancelled');
       }
-      
+
       this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
         endpoint: 'create_records',
         method: 'POST',
@@ -1143,15 +1187,44 @@ export class AirtableClient {
           message: `Starting update_records request...`
         });
       }
-      
+
       // Use standard HTTP client for other auth types with abort signal
       const requestConfig: any = {};
       if (options?.signal) {
         requestConfig.signal = options.signal;
       }
-      
-      const response = await this.httpClient.patch(requestPath, hasRawArrayBody ? rawBodyData : (Object.keys(bodyParams).length > 0 ? bodyParams : undefined), { params: queryParams, ...requestConfig });
-      
+
+      // Batch records in chunks of 10 (Airtable API limit per request)
+      const records = bodyParams.records || [];
+      if (records.length > 100) {
+        throw new Error('Cannot update more than 100 records at once');
+      }
+      const chunks = this.chunkArray(records, 10);
+      const allRecords: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        if (options?.onProgress) {
+          await options.onProgress({
+            progress: Math.round((i / chunks.length) * 100),
+            total: 100,
+            message: `Updating records batch ${i + 1} of ${chunks.length}...`
+          });
+        }
+        try {
+          const chunkBody = { ...bodyParams, records: chunks[i] };
+          const response = await this.httpClient.patch(requestPath, chunkBody, { params: queryParams, ...requestConfig });
+          allRecords.push(...(response.data.records || []));
+        } catch (chunkError) {
+          if (axios.isCancel(chunkError)) throw chunkError;
+          errors.push(`Batch ${i + 1}: ${chunkError instanceof Error ? chunkError.message : String(chunkError)}`);
+        }
+      }
+
+      if (allRecords.length === 0 && errors.length > 0) {
+        throw new Error(`All batches failed: ${errors.join('; ')}`);
+      }
+
       // Report completion progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1160,27 +1233,34 @@ export class AirtableClient {
           message: `Completed update_records request`
         });
       }
-      
+
       const duration = Date.now() - startTime;
+      const resultData: any = { records: allRecords };
+      if (errors.length > 0) {
+        resultData.errors = errors;
+      }
       this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
         endpoint: 'update_records',
         method: 'PATCH',
         path: '/{base_id}/{table_id_or_name}',
         duration_ms: duration,
-        responseDataSize: JSON.stringify(response.data).length
+        responseDataSize: JSON.stringify(resultData).length,
+        batchCount: chunks.length,
+        totalRecords: allRecords.length,
+        errorCount: errors.length
       });
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(response.data, null, 2)
+            text: JSON.stringify(resultData, null, 2)
           }
         ]
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // Check if error is due to cancellation
       if (axios.isCancel(error)) {
         this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', {
@@ -1191,7 +1271,7 @@ export class AirtableClient {
         });
         throw new Error('Request was cancelled');
       }
-      
+
       this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
         endpoint: 'update_records',
         method: 'PATCH',
@@ -1290,15 +1370,44 @@ export class AirtableClient {
           message: `Starting replace_records request...`
         });
       }
-      
+
       // Use standard HTTP client for other auth types with abort signal
       const requestConfig: any = {};
       if (options?.signal) {
         requestConfig.signal = options.signal;
       }
-      
-      const response = await this.httpClient.put(requestPath, hasRawArrayBody ? rawBodyData : (Object.keys(bodyParams).length > 0 ? bodyParams : undefined), { params: queryParams, ...requestConfig });
-      
+
+      // Batch records in chunks of 10 (Airtable API limit per request)
+      const records = bodyParams.records || [];
+      if (records.length > 100) {
+        throw new Error('Cannot replace more than 100 records at once');
+      }
+      const chunks = this.chunkArray(records, 10);
+      const allRecords: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        if (options?.onProgress) {
+          await options.onProgress({
+            progress: Math.round((i / chunks.length) * 100),
+            total: 100,
+            message: `Replacing records batch ${i + 1} of ${chunks.length}...`
+          });
+        }
+        try {
+          const chunkBody = { ...bodyParams, records: chunks[i] };
+          const response = await this.httpClient.put(requestPath, chunkBody, { params: queryParams, ...requestConfig });
+          allRecords.push(...(response.data.records || []));
+        } catch (chunkError) {
+          if (axios.isCancel(chunkError)) throw chunkError;
+          errors.push(`Batch ${i + 1}: ${chunkError instanceof Error ? chunkError.message : String(chunkError)}`);
+        }
+      }
+
+      if (allRecords.length === 0 && errors.length > 0) {
+        throw new Error(`All batches failed: ${errors.join('; ')}`);
+      }
+
       // Report completion progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1307,27 +1416,34 @@ export class AirtableClient {
           message: `Completed replace_records request`
         });
       }
-      
+
       const duration = Date.now() - startTime;
+      const resultData: any = { records: allRecords };
+      if (errors.length > 0) {
+        resultData.errors = errors;
+      }
       this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
         endpoint: 'replace_records',
         method: 'PUT',
         path: '/{base_id}/{table_id_or_name}',
         duration_ms: duration,
-        responseDataSize: JSON.stringify(response.data).length
+        responseDataSize: JSON.stringify(resultData).length,
+        batchCount: chunks.length,
+        totalRecords: allRecords.length,
+        errorCount: errors.length
       });
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(response.data, null, 2)
+            text: JSON.stringify(resultData, null, 2)
           }
         ]
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // Check if error is due to cancellation
       if (axios.isCancel(error)) {
         this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', {
@@ -1338,7 +1454,7 @@ export class AirtableClient {
         });
         throw new Error('Request was cancelled');
       }
-      
+
       this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
         endpoint: 'replace_records',
         method: 'PUT',
@@ -1433,15 +1549,44 @@ export class AirtableClient {
           message: `Starting delete_records request...`
         });
       }
-      
+
       // Use standard HTTP client for other auth types with abort signal
       const requestConfig: any = {};
       if (options?.signal) {
         requestConfig.signal = options.signal;
       }
-      
-      const response = await this.httpClient.delete(requestPath, { params: queryParams, ...requestConfig });
-      
+
+      // Batch record IDs in chunks of 10 (Airtable API limit per request)
+      const recordIds = queryParams.records || [];
+      if (recordIds.length > 100) {
+        throw new Error('Cannot delete more than 100 records at once');
+      }
+      const chunks = this.chunkArray(recordIds, 10);
+      const allRecords: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        if (options?.onProgress) {
+          await options.onProgress({
+            progress: Math.round((i / chunks.length) * 100),
+            total: 100,
+            message: `Deleting records batch ${i + 1} of ${chunks.length}...`
+          });
+        }
+        try {
+          const chunkParams = { ...queryParams, records: chunks[i] };
+          const response = await this.httpClient.delete(requestPath, { params: chunkParams, ...requestConfig });
+          allRecords.push(...(response.data.records || []));
+        } catch (chunkError) {
+          if (axios.isCancel(chunkError)) throw chunkError;
+          errors.push(`Batch ${i + 1}: ${chunkError instanceof Error ? chunkError.message : String(chunkError)}`);
+        }
+      }
+
+      if (allRecords.length === 0 && errors.length > 0) {
+        throw new Error(`All batches failed: ${errors.join('; ')}`);
+      }
+
       // Report completion progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1450,27 +1595,34 @@ export class AirtableClient {
           message: `Completed delete_records request`
         });
       }
-      
+
       const duration = Date.now() - startTime;
+      const resultData: any = { records: allRecords };
+      if (errors.length > 0) {
+        resultData.errors = errors;
+      }
       this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
         endpoint: 'delete_records',
         method: 'DELETE',
         path: '/{base_id}/{table_id_or_name}',
         duration_ms: duration,
-        responseDataSize: JSON.stringify(response.data).length
+        responseDataSize: JSON.stringify(resultData).length,
+        batchCount: chunks.length,
+        totalRecords: allRecords.length,
+        errorCount: errors.length
       });
-      
+
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(response.data, null, 2)
+            text: JSON.stringify(resultData, null, 2)
           }
         ]
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       // Check if error is due to cancellation
       if (axios.isCancel(error)) {
         this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', {
@@ -1481,7 +1633,7 @@ export class AirtableClient {
         });
         throw new Error('Request was cancelled');
       }
-      
+
       this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
         endpoint: 'delete_records',
         method: 'DELETE',
@@ -1491,6 +1643,150 @@ export class AirtableClient {
         errorType: error instanceof Error ? error.constructor.name : 'unknown'
       });
       throw new Error(`Failed to execute delete_records: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async upsertRecords(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'upsert_records',
+      method: 'PATCH',
+      path: '/{base_id}/{table_id_or_name}',
+      paramCount: Object.keys(params || {}).length,
+      paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      const extractedParams: string[] = [];
+
+      if (params.base_id !== undefined) {
+        pathParams.base_id = params.base_id;
+        extractedParams.push('base_id');
+      }
+      if (params.table_id_or_name !== undefined) {
+        pathParams.table_id_or_name = params.table_id_or_name;
+        extractedParams.push('table_id_or_name');
+      }
+
+      const path = this.buildPath('/{base_id}/{table_id_or_name}', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({
+          progress: 0,
+          total: 100,
+          message: `Starting upsert_records request...`
+        });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) {
+        requestConfig.signal = options.signal;
+      }
+
+      const records = params.records || [];
+      if (records.length > 100) {
+        throw new Error('Cannot upsert more than 100 records at once');
+      }
+      const fieldsToMergeOn = params.fieldsToMergeOn;
+      const typecast = params.typecast;
+
+      const chunks = this.chunkArray(records, 10);
+      const allRecords: any[] = [];
+      const allCreatedRecords: string[] = [];
+      const allUpdatedRecords: string[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        if (options?.onProgress) {
+          await options.onProgress({
+            progress: Math.round((i / chunks.length) * 100),
+            total: 100,
+            message: `Upserting records batch ${i + 1} of ${chunks.length}...`
+          });
+        }
+        try {
+          const chunkBody: any = {
+            records: chunks[i],
+            performUpsert: { fieldsToMergeOn }
+          };
+          if (typecast !== undefined) chunkBody.typecast = typecast;
+
+          const response = await this.httpClient.patch(requestPath, chunkBody, requestConfig);
+          allRecords.push(...(response.data.records || []));
+          allCreatedRecords.push(...(response.data.createdRecords || []));
+          allUpdatedRecords.push(...(response.data.updatedRecords || []));
+        } catch (chunkError) {
+          if (axios.isCancel(chunkError)) throw chunkError;
+          errors.push(`Batch ${i + 1}: ${chunkError instanceof Error ? chunkError.message : String(chunkError)}`);
+        }
+      }
+
+      if (allRecords.length === 0 && errors.length > 0) {
+        throw new Error(`All batches failed: ${errors.join('; ')}`);
+      }
+
+      if (options?.onProgress) {
+        await options.onProgress({
+          progress: 100,
+          total: 100,
+          message: `Completed upsert_records request`
+        });
+      }
+
+      const duration = Date.now() - startTime;
+      const resultData: any = {
+        records: allRecords,
+        createdRecords: allCreatedRecords,
+        updatedRecords: allUpdatedRecords
+      };
+      if (errors.length > 0) {
+        resultData.errors = errors;
+      }
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'upsert_records',
+        method: 'PATCH',
+        path: '/{base_id}/{table_id_or_name}',
+        duration_ms: duration,
+        responseDataSize: JSON.stringify(resultData).length,
+        batchCount: chunks.length,
+        totalRecords: allRecords.length,
+        createdCount: allCreatedRecords.length,
+        updatedCount: allUpdatedRecords.length,
+        errorCount: errors.length
+      });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(resultData, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', {
+          endpoint: 'upsert_records',
+          method: 'PATCH',
+          path: '/{base_id}/{table_id_or_name}',
+          duration_ms: duration
+        });
+        throw new Error('Request was cancelled');
+      }
+
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'upsert_records',
+        method: 'PATCH',
+        path: '/{base_id}/{table_id_or_name}',
+        duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute upsert_records: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -2957,6 +3253,327 @@ export class AirtableClient {
         errorType: error instanceof Error ? error.constructor.name : 'unknown'
       });
       throw new Error(`Failed to execute delete_view: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async listComments(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'list_comments',
+      method: 'GET',
+      path: '/{base_id}/{table_id_or_name}/{record_id}/comments',
+      paramCount: Object.keys(params || {}).length,
+      paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      const queryParams: Record<string, any> = {};
+
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.table_id_or_name !== undefined) pathParams.table_id_or_name = params.table_id_or_name;
+      if (params.record_id !== undefined) pathParams.record_id = params.record_id;
+      if (params.offset !== undefined) queryParams.offset = params.offset;
+
+      const path = this.buildPath('/{base_id}/{table_id_or_name}/{record_id}/comments', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting list_comments request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.get(requestPath, { params: queryParams, ...requestConfig });
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed list_comments request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'list_comments',
+        method: 'GET',
+        path: '/{base_id}/{table_id_or_name}/{record_id}/comments',
+        duration_ms: duration,
+        responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }]
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'list_comments', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'list_comments', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute list_comments: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async createComment(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'create_comment',
+      method: 'POST',
+      path: '/{base_id}/{table_id_or_name}/{record_id}/comments',
+      paramCount: Object.keys(params || {}).length,
+      paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.table_id_or_name !== undefined) pathParams.table_id_or_name = params.table_id_or_name;
+      if (params.record_id !== undefined) pathParams.record_id = params.record_id;
+
+      const path = this.buildPath('/{base_id}/{table_id_or_name}/{record_id}/comments', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting create_comment request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.post(requestPath, { text: params.text }, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed create_comment request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'create_comment',
+        method: 'POST',
+        path: '/{base_id}/{table_id_or_name}/{record_id}/comments',
+        duration_ms: duration,
+        responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }]
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'create_comment', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'create_comment', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute create_comment: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async updateComment(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'update_comment',
+      method: 'PATCH',
+      path: '/{base_id}/{table_id_or_name}/{record_id}/comments/{comment_id}',
+      paramCount: Object.keys(params || {}).length,
+      paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.table_id_or_name !== undefined) pathParams.table_id_or_name = params.table_id_or_name;
+      if (params.record_id !== undefined) pathParams.record_id = params.record_id;
+      if (params.comment_id !== undefined) pathParams.comment_id = params.comment_id;
+
+      const path = this.buildPath('/{base_id}/{table_id_or_name}/{record_id}/comments/{comment_id}', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting update_comment request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.patch(requestPath, { text: params.text }, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed update_comment request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'update_comment',
+        method: 'PATCH',
+        path: '/{base_id}/{table_id_or_name}/{record_id}/comments/{comment_id}',
+        duration_ms: duration,
+        responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }]
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'update_comment', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'update_comment', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute update_comment: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async deleteComment(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'delete_comment',
+      method: 'DELETE',
+      path: '/{base_id}/{table_id_or_name}/{record_id}/comments/{comment_id}',
+      paramCount: Object.keys(params || {}).length,
+      paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.table_id_or_name !== undefined) pathParams.table_id_or_name = params.table_id_or_name;
+      if (params.record_id !== undefined) pathParams.record_id = params.record_id;
+      if (params.comment_id !== undefined) pathParams.comment_id = params.comment_id;
+
+      const path = this.buildPath('/{base_id}/{table_id_or_name}/{record_id}/comments/{comment_id}', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting delete_comment request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.delete(requestPath, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed delete_comment request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'delete_comment',
+        method: 'DELETE',
+        path: '/{base_id}/{table_id_or_name}/{record_id}/comments/{comment_id}',
+        duration_ms: duration,
+        responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }]
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'delete_comment', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'delete_comment', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute delete_comment: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async uploadAttachment(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'upload_attachment',
+      method: 'POST',
+      path: '/{base_id}/uploads',
+      paramCount: Object.keys(params || {}).length,
+      paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+
+      const path = this.buildPath('/{base_id}/uploads', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting upload_attachment request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      // Decode base64 file content
+      const fileBuffer = Buffer.from(params.file, 'base64');
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (fileBuffer.length > maxSize) {
+        throw new Error(`File size ${fileBuffer.length} bytes exceeds maximum of 5MB`);
+      }
+
+      // Build multipart/form-data
+      const FormData = (await import('form-data')).default;
+      const form = new FormData();
+      form.append('file', fileBuffer, {
+        filename: params.filename,
+        contentType: params.content_type
+      });
+
+      const response = await this.httpClient.post(requestPath, form, {
+        ...requestConfig,
+        headers: {
+          ...form.getHeaders()
+        }
+      });
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed upload_attachment request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'upload_attachment',
+        method: 'POST',
+        path: '/{base_id}/uploads',
+        duration_ms: duration,
+        responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return {
+        content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }]
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'upload_attachment', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'upload_attachment', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute upload_attachment: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

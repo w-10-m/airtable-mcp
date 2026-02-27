@@ -28,25 +28,31 @@ describe('JSON-RPC Protocol', () => {
       const toolNames = tools.map(t => t.name);
 
       const expectedTools = [
+        'airtable_create_comment',
         'airtable_create_field',
         'airtable_create_records',
         'airtable_create_table',
         'airtable_create_view',
+        'airtable_delete_comment',
         'airtable_delete_records',
         'airtable_delete_view',
         'airtable_get_base_schema',
         'airtable_get_record',
-        'airtable_search_records',
         'airtable_get_table',
         'airtable_get_view',
         'airtable_list_bases',
+        'airtable_list_comments',
         'airtable_list_records',
         'airtable_list_views',
         'airtable_replace_records',
+        'airtable_search_records',
+        'airtable_update_comment',
         'airtable_update_field',
         'airtable_update_records',
         'airtable_update_table',
-        'airtable_update_view'
+        'airtable_update_view',
+        'airtable_upload_attachment',
+        'airtable_upsert_records'
       ];
 
       for (const tool of expectedTools) {
@@ -57,7 +63,7 @@ describe('JSON-RPC Protocol', () => {
 
   describe('error handling', () => {
     it('returns error for missing required parameters', async () => {
-      await expect(client.callTool('airtable_create_records', {})).rejects.toThrow();
+      await expect(client.callTool('airtable_get_record', {})).rejects.toThrow();
     });
 
     it('returns error for non-existent tool', async () => {

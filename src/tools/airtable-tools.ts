@@ -51,6 +51,51 @@ export class AirtableTools {
     }
   }
 
+  private applyDetailLevel(result: any, detailLevel: string, context: 'records' | 'schema'): any {
+    if (!result?.content?.[0]?.text) return result;
+    const parsed = JSON.parse(result.content[0].text);
+
+    if (context === 'records') {
+      const filterRecord = (record: any) => {
+        if (detailLevel === 'ids_only') {
+          return { id: record.id };
+        }
+        if (detailLevel === 'summary') {
+          const fields = record.fields || {};
+          const firstKey = Object.keys(fields)[0];
+          return {
+            id: record.id,
+            ...(firstKey ? { primaryField: { [firstKey]: fields[firstKey] } } : {})
+          };
+        }
+        return record;
+      };
+
+      if (Array.isArray(parsed.records)) {
+        parsed.records = parsed.records.map(filterRecord);
+      } else if (parsed.id) {
+        const filtered = filterRecord(parsed);
+        result.content[0].text = JSON.stringify(filtered, null, 2);
+        return result;
+      }
+    } else if (context === 'schema') {
+      const tables = parsed.tables || [];
+      if (detailLevel === 'ids_only') {
+        parsed.tables = tables.map((t: any) => ({ id: t.id, name: t.name }));
+      } else if (detailLevel === 'summary') {
+        parsed.tables = tables.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          fields: (t.fields || []).map((f: any) => ({ id: f.id, name: f.name, type: f.type }))
+        }));
+      }
+    }
+
+    result.content[0].text = JSON.stringify(parsed, null, 2);
+    return result;
+  }
+
   getToolDefinitions(): Tool[] {
     return [
       {
@@ -76,6 +121,11 @@ export class AirtableTools {
             base_id: {
               type: 'string',
               description: 'Base ID to get schema for'
+            },
+            detail_level: {
+              type: 'string',
+              enum: ['full', 'summary', 'ids_only'],
+              description: 'Level of detail to return (default: full)'
             }
           },
           required: ['base_id']
@@ -134,6 +184,11 @@ export class AirtableTools {
             offset: {
               type: 'string',
               description: 'Pagination offset'
+            },
+            detail_level: {
+              type: 'string',
+              enum: ['full', 'summary', 'ids_only'],
+              description: 'Level of detail to return (default: full)'
             }
           },
           required: ['base_id','table_id_or_name']
@@ -161,6 +216,11 @@ export class AirtableTools {
               type: 'array',
               items: { type: 'string' },
               description: 'Array of field names to return (omit for all fields). Filtered client-side.'
+            },
+            detail_level: {
+              type: 'string',
+              enum: ['full', 'summary', 'ids_only'],
+              description: 'Level of detail to return (default: full)'
             }
           },
           required: ['base_id','table_id_or_name','record_id']
@@ -197,6 +257,11 @@ export class AirtableTools {
               type: 'array',
               items: { type: 'string' },
               description: 'Field names to include in results (omit for all)'
+            },
+            detail_level: {
+              type: 'string',
+              enum: ['full', 'summary', 'ids_only'],
+              description: 'Level of detail to return (default: full)'
             }
           },
           required: ['base_id', 'table_id_or_name', 'search_term', 'field_names']
@@ -204,7 +269,7 @@ export class AirtableTools {
       },
       {
         name: 'airtable_create_records',
-        description: 'Create new records (up to 10 at once)',
+        description: 'Create new records (up to 100 total, automatically batched in groups of 10)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -230,7 +295,7 @@ export class AirtableTools {
       },
       {
         name: 'airtable_update_records',
-        description: 'Update existing records (up to 10 at once)',
+        description: 'Update existing records (up to 100 total, automatically batched in groups of 10)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -256,7 +321,7 @@ export class AirtableTools {
       },
       {
         name: 'airtable_replace_records',
-        description: 'Replace records completely (up to 10 at once)',
+        description: 'Replace records completely (up to 100 total, automatically batched in groups of 10)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -282,7 +347,7 @@ export class AirtableTools {
       },
       {
         name: 'airtable_delete_records',
-        description: 'Delete records (up to 10 at once)',
+        description: 'Delete records (up to 100 total, automatically batched in groups of 10)',
         inputSchema: {
           type: 'object',
           properties: {
@@ -300,6 +365,37 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name','records']
+        }
+      },
+      {
+        name: 'airtable_upsert_records',
+        description: 'Upsert records (create or update based on merge fields, up to 100 total, automatically batched in groups of 10)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the table'
+            },
+            table_id_or_name: {
+              type: 'string',
+              description: 'Table ID or name'
+            },
+            records: {
+              type: 'array',
+              description: 'Array of record objects to upsert'
+            },
+            fieldsToMergeOn: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of field names to match existing records on'
+            },
+            typecast: {
+              type: 'boolean',
+              description: 'Enable automatic type casting'
+            }
+          },
+          required: ['base_id', 'table_id_or_name', 'records', 'fieldsToMergeOn']
         }
       },
       {
@@ -569,6 +665,140 @@ export class AirtableTools {
           },
           required: ['base_id','table_id','view_id']
         }
+      },
+      {
+        name: 'airtable_list_comments',
+        description: 'List comments on a record',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the table'
+            },
+            table_id_or_name: {
+              type: 'string',
+              description: 'Table ID or name'
+            },
+            record_id: {
+              type: 'string',
+              description: 'Record ID to list comments for'
+            },
+            offset: {
+              type: 'string',
+              description: 'Pagination offset'
+            }
+          },
+          required: ['base_id', 'table_id_or_name', 'record_id']
+        }
+      },
+      {
+        name: 'airtable_create_comment',
+        description: 'Create a comment on a record',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the table'
+            },
+            table_id_or_name: {
+              type: 'string',
+              description: 'Table ID or name'
+            },
+            record_id: {
+              type: 'string',
+              description: 'Record ID to add comment to'
+            },
+            text: {
+              type: 'string',
+              description: 'Comment text'
+            }
+          },
+          required: ['base_id', 'table_id_or_name', 'record_id', 'text']
+        }
+      },
+      {
+        name: 'airtable_update_comment',
+        description: 'Update a comment on a record',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the table'
+            },
+            table_id_or_name: {
+              type: 'string',
+              description: 'Table ID or name'
+            },
+            record_id: {
+              type: 'string',
+              description: 'Record ID containing the comment'
+            },
+            comment_id: {
+              type: 'string',
+              description: 'Comment ID to update'
+            },
+            text: {
+              type: 'string',
+              description: 'Updated comment text'
+            }
+          },
+          required: ['base_id', 'table_id_or_name', 'record_id', 'comment_id', 'text']
+        }
+      },
+      {
+        name: 'airtable_delete_comment',
+        description: 'Delete a comment from a record',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the table'
+            },
+            table_id_or_name: {
+              type: 'string',
+              description: 'Table ID or name'
+            },
+            record_id: {
+              type: 'string',
+              description: 'Record ID containing the comment'
+            },
+            comment_id: {
+              type: 'string',
+              description: 'Comment ID to delete'
+            }
+          },
+          required: ['base_id', 'table_id_or_name', 'record_id', 'comment_id']
+        }
+      },
+      {
+        name: 'airtable_upload_attachment',
+        description: 'Upload a file attachment to a base',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID to upload the attachment to'
+            },
+            content_type: {
+              type: 'string',
+              description: 'MIME type of the file (e.g., image/png, application/pdf)'
+            },
+            file: {
+              type: 'string',
+              description: 'Base64-encoded file content'
+            },
+            filename: {
+              type: 'string',
+              description: 'Name of the file'
+            }
+          },
+          required: ['base_id', 'content_type', 'file', 'filename']
+        }
       }
     ];
   }
@@ -584,6 +814,7 @@ export class AirtableTools {
       'airtable_update_records',
       'airtable_replace_records',
       'airtable_delete_records',
+      'airtable_upsert_records',
       'airtable_get_table',
       'airtable_create_table',
       'airtable_update_table',
@@ -593,7 +824,12 @@ export class AirtableTools {
       'airtable_get_view',
       'airtable_create_view',
       'airtable_update_view',
-      'airtable_delete_view'
+      'airtable_delete_view',
+      'airtable_list_comments',
+      'airtable_create_comment',
+      'airtable_update_comment',
+      'airtable_delete_comment',
+      'airtable_upload_attachment'
     ];
     return supportedTools.includes(toolName);
   }
@@ -669,14 +905,14 @@ export class AirtableTools {
             });
           }
           break;
-        case 'airtable_get_base_schema':
+        case 'airtable_get_base_schema': {
           this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
             tool: 'airtable_get_base_schema',
             clientMethod: 'getBaseSchema',
             hasAbortSignal: !!requestOptions.signal,
             hasProgressCallback: !!requestOptions.onProgress
           });
-          
+
           // Report initial progress
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
@@ -685,9 +921,13 @@ export class AirtableTools {
               message: `Starting get_base_schema operation...`
             });
           }
-          
-          result = await this.client.getBaseSchema(args, requestOptions);
-          
+
+          const { detail_level: schemaDetailLevel, ...schemaClientArgs } = args;
+          result = await this.client.getBaseSchema(schemaClientArgs, requestOptions);
+          if (schemaDetailLevel && schemaDetailLevel !== 'full') {
+            result = this.applyDetailLevel(result, schemaDetailLevel, 'schema');
+          }
+
           // Report completion
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
@@ -697,14 +937,15 @@ export class AirtableTools {
             });
           }
           break;
-        case 'airtable_list_records':
+        }
+        case 'airtable_list_records': {
           this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
             tool: 'airtable_list_records',
             clientMethod: 'listRecords',
             hasAbortSignal: !!requestOptions.signal,
             hasProgressCallback: !!requestOptions.onProgress
           });
-          
+
           // Report initial progress
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
@@ -713,9 +954,13 @@ export class AirtableTools {
               message: `Starting list_records operation...`
             });
           }
-          
-          result = await this.client.listRecords(args, requestOptions);
-          
+
+          const { detail_level: listDetailLevel, ...listClientArgs } = args;
+          result = await this.client.listRecords(listClientArgs, requestOptions);
+          if (listDetailLevel && listDetailLevel !== 'full') {
+            result = this.applyDetailLevel(result, listDetailLevel, 'records');
+          }
+
           // Report completion
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
@@ -725,14 +970,15 @@ export class AirtableTools {
             });
           }
           break;
-        case 'airtable_get_record':
+        }
+        case 'airtable_get_record': {
           this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
             tool: 'airtable_get_record',
             clientMethod: 'getRecord',
             hasAbortSignal: !!requestOptions.signal,
             hasProgressCallback: !!requestOptions.onProgress
           });
-          
+
           // Report initial progress
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
@@ -741,20 +987,25 @@ export class AirtableTools {
               message: `Starting get_record operation...`
             });
           }
-          
-          result = await this.client.getRecord(args, requestOptions);
+
+          const { detail_level: getDetailLevel, ...getClientArgs } = args;
+          result = await this.client.getRecord(getClientArgs, requestOptions);
 
           // Client-side field filtering (Airtable get_record API doesn't support fields param)
-          if (args.fields && Array.isArray(args.fields) && result?.content?.[0]?.text) {
+          if (getClientArgs.fields && Array.isArray(getClientArgs.fields) && result?.content?.[0]?.text) {
             const parsed = JSON.parse(result.content[0].text);
             if (parsed.fields) {
               const filtered: Record<string, any> = {};
-              for (const f of args.fields) {
+              for (const f of getClientArgs.fields) {
                 if (f in parsed.fields) filtered[f] = parsed.fields[f];
               }
               parsed.fields = filtered;
               result.content[0].text = JSON.stringify(parsed, null, 2);
             }
+          }
+
+          if (getDetailLevel && getDetailLevel !== 'full') {
+            result = this.applyDetailLevel(result, getDetailLevel, 'records');
           }
 
           // Report completion
@@ -766,6 +1017,7 @@ export class AirtableTools {
             });
           }
           break;
+        }
         case 'airtable_search_records': {
           this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
             tool: 'airtable_search_records',
@@ -801,6 +1053,10 @@ export class AirtableTools {
           };
 
           result = await this.client.listRecords(searchArgs, requestOptions);
+
+          if (args.detail_level && args.detail_level !== 'full') {
+            result = this.applyDetailLevel(result, args.detail_level, 'records');
+          }
 
           // Report completion
           if (context?.progressToken && progressReporter) {
@@ -914,13 +1170,39 @@ export class AirtableTools {
           }
           
           result = await this.client.deleteRecords(args, requestOptions);
-          
+
           // Report completion
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
               progress: 100,
               total: 100,
               message: `Completed delete_records operation`
+            });
+          }
+          break;
+        case 'airtable_upsert_records':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_upsert_records',
+            clientMethod: 'upsertRecords',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0,
+              total: 100,
+              message: `Starting upsert_records operation...`
+            });
+          }
+
+          result = await this.client.upsertRecords(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100,
+              total: 100,
+              message: `Completed upsert_records operation`
             });
           }
           break;
@@ -1194,13 +1476,123 @@ export class AirtableTools {
           }
           
           result = await this.client.deleteView(args, requestOptions);
-          
+
           // Report completion
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
               progress: 100,
               total: 100,
               message: `Completed delete_view operation`
+            });
+          }
+          break;
+        case 'airtable_list_comments':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_list_comments',
+            clientMethod: 'listComments',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting list_comments operation...`
+            });
+          }
+
+          result = await this.client.listComments(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed list_comments operation`
+            });
+          }
+          break;
+        case 'airtable_create_comment':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_create_comment',
+            clientMethod: 'createComment',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting create_comment operation...`
+            });
+          }
+
+          result = await this.client.createComment(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed create_comment operation`
+            });
+          }
+          break;
+        case 'airtable_update_comment':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_update_comment',
+            clientMethod: 'updateComment',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting update_comment operation...`
+            });
+          }
+
+          result = await this.client.updateComment(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed update_comment operation`
+            });
+          }
+          break;
+        case 'airtable_delete_comment':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_delete_comment',
+            clientMethod: 'deleteComment',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting delete_comment operation...`
+            });
+          }
+
+          result = await this.client.deleteComment(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed delete_comment operation`
+            });
+          }
+          break;
+        case 'airtable_upload_attachment':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_upload_attachment',
+            clientMethod: 'uploadAttachment',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting upload_attachment operation...`
+            });
+          }
+
+          result = await this.client.uploadAttachment(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed upload_attachment operation`
             });
           }
           break;
