@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/w-10-m/airtable-mcp/compare/v1.6.0...v1.7.0) (2026-02-27)
+
+
+### Features
+
+* upgrade SDK, add tool annotations, webhooks, and HTTP transport ([#2](https://github.com/w-10-m/airtable-mcp/issues/2)) ([2290ea4](https://github.com/w-10-m/airtable-mcp/commit/2290ea4d9de97e5704038e245f5c29df2c7c5a92))
+
 # [1.6.0](https://github.com/w-10-m/airtable-mcp/compare/v1.5.1...v1.6.0) (2026-02-27)
 
 
