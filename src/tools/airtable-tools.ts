@@ -110,7 +110,8 @@ export class AirtableTools {
             }
           },
           required: []
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_get_base_schema',
@@ -129,7 +130,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_list_records',
@@ -192,7 +194,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_get_record',
@@ -224,7 +227,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name','record_id']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_search_records',
@@ -265,7 +269,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'table_id_or_name', 'search_term', 'field_names']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_create_records',
@@ -291,7 +296,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name','records']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
       },
       {
         name: 'airtable_update_records',
@@ -317,7 +323,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name','records']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_replace_records',
@@ -343,7 +350,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name','records']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true }
       },
       {
         name: 'airtable_delete_records',
@@ -365,7 +373,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id_or_name','records']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false }
       },
       {
         name: 'airtable_upsert_records',
@@ -396,7 +405,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'table_id_or_name', 'records', 'fieldsToMergeOn']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_get_table',
@@ -414,7 +424,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_create_table',
@@ -440,7 +451,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','name','fields']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
       },
       {
         name: 'airtable_update_table',
@@ -466,7 +478,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_create_field',
@@ -500,7 +513,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id','name','type']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
       },
       {
         name: 'airtable_update_field',
@@ -534,7 +548,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id','field_id']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_list_views',
@@ -552,7 +567,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_get_view',
@@ -574,7 +590,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id','view_id']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_create_view',
@@ -608,7 +625,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id','name','type']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
       },
       {
         name: 'airtable_update_view',
@@ -642,7 +660,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id','view_id']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_delete_view',
@@ -664,7 +683,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id','table_id','view_id']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false }
       },
       {
         name: 'airtable_list_comments',
@@ -690,7 +710,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'table_id_or_name', 'record_id']
-        }
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_create_comment',
@@ -716,7 +737,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'table_id_or_name', 'record_id', 'text']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
       },
       {
         name: 'airtable_update_comment',
@@ -746,7 +768,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'table_id_or_name', 'record_id', 'comment_id', 'text']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
       },
       {
         name: 'airtable_delete_comment',
@@ -772,7 +795,8 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'table_id_or_name', 'record_id', 'comment_id']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false }
       },
       {
         name: 'airtable_upload_attachment',
@@ -798,7 +822,107 @@ export class AirtableTools {
             }
           },
           required: ['base_id', 'content_type', 'file', 'filename']
-        }
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
+      },
+      {
+        name: 'airtable_list_webhooks',
+        description: 'List all webhooks for a base',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID to list webhooks for'
+            }
+          },
+          required: ['base_id']
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
+      },
+      {
+        name: 'airtable_create_webhook',
+        description: 'Create a webhook to receive notifications for base changes',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID to create webhook for'
+            },
+            notificationUrl: {
+              type: 'string',
+              description: 'URL to receive webhook notifications'
+            },
+            specification: {
+              type: 'object',
+              description: 'Webhook specification with options like filters (e.g., { options: { filters: { dataTypes: ["tableData"], recordChangeScope: "tblXXX" } } })'
+            }
+          },
+          required: ['base_id', 'notificationUrl']
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false }
+      },
+      {
+        name: 'airtable_delete_webhook',
+        description: 'Delete a webhook',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the webhook'
+            },
+            webhook_id: {
+              type: 'string',
+              description: 'Webhook ID to delete'
+            }
+          },
+          required: ['base_id', 'webhook_id']
+        },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false }
+      },
+      {
+        name: 'airtable_refresh_webhook',
+        description: 'Refresh a webhook to extend its expiration',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the webhook'
+            },
+            webhook_id: {
+              type: 'string',
+              description: 'Webhook ID to refresh'
+            }
+          },
+          required: ['base_id', 'webhook_id']
+        },
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true }
+      },
+      {
+        name: 'airtable_list_webhook_payloads',
+        description: 'List payloads for a webhook (cursor-based pagination)',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the webhook'
+            },
+            webhook_id: {
+              type: 'string',
+              description: 'Webhook ID to get payloads for'
+            },
+            cursor: {
+              type: 'string',
+              description: 'Cursor for pagination (from previous response)'
+            }
+          },
+          required: ['base_id', 'webhook_id']
+        },
+        annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true }
       }
     ];
   }
@@ -829,7 +953,12 @@ export class AirtableTools {
       'airtable_create_comment',
       'airtable_update_comment',
       'airtable_delete_comment',
-      'airtable_upload_attachment'
+      'airtable_upload_attachment',
+      'airtable_list_webhooks',
+      'airtable_create_webhook',
+      'airtable_delete_webhook',
+      'airtable_refresh_webhook',
+      'airtable_list_webhook_payloads'
     ];
     return supportedTools.includes(toolName);
   }
@@ -1593,6 +1722,106 @@ export class AirtableTools {
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
               progress: 100, total: 100, message: `Completed upload_attachment operation`
+            });
+          }
+          break;
+        case 'airtable_list_webhooks':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_list_webhooks', clientMethod: 'listWebhooks',
+            hasAbortSignal: !!requestOptions.signal, hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting list_webhooks operation...`
+            });
+          }
+
+          result = await this.client.listWebhooks(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed list_webhooks operation`
+            });
+          }
+          break;
+        case 'airtable_create_webhook':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_create_webhook', clientMethod: 'createWebhook',
+            hasAbortSignal: !!requestOptions.signal, hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting create_webhook operation...`
+            });
+          }
+
+          result = await this.client.createWebhook(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed create_webhook operation`
+            });
+          }
+          break;
+        case 'airtable_delete_webhook':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_delete_webhook', clientMethod: 'deleteWebhook',
+            hasAbortSignal: !!requestOptions.signal, hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting delete_webhook operation...`
+            });
+          }
+
+          result = await this.client.deleteWebhook(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed delete_webhook operation`
+            });
+          }
+          break;
+        case 'airtable_refresh_webhook':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_refresh_webhook', clientMethod: 'refreshWebhook',
+            hasAbortSignal: !!requestOptions.signal, hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting refresh_webhook operation...`
+            });
+          }
+
+          result = await this.client.refreshWebhook(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed refresh_webhook operation`
+            });
+          }
+          break;
+        case 'airtable_list_webhook_payloads':
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_list_webhook_payloads', clientMethod: 'listWebhookPayloads',
+            hasAbortSignal: !!requestOptions.signal, hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0, total: 100, message: `Starting list_webhook_payloads operation...`
+            });
+          }
+
+          result = await this.client.listWebhookPayloads(args, requestOptions);
+
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100, total: 100, message: `Completed list_webhook_payloads operation`
             });
           }
           break;

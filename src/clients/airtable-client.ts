@@ -3577,4 +3577,258 @@ export class AirtableClient {
     }
   }
 
+  async listWebhooks(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'list_webhooks', method: 'GET', path: '/bases/{base_id}/webhooks',
+      paramCount: Object.keys(params || {}).length, paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+
+      const path = this.buildPath('/bases/{base_id}/webhooks', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting list_webhooks request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.get(requestPath, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed list_webhooks request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'list_webhooks', method: 'GET', path: '/bases/{base_id}/webhooks',
+        duration_ms: duration, responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'list_webhooks', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'list_webhooks', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute list_webhooks: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async createWebhook(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'create_webhook', method: 'POST', path: '/bases/{base_id}/webhooks',
+      paramCount: Object.keys(params || {}).length, paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+
+      const path = this.buildPath('/bases/{base_id}/webhooks', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting create_webhook request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const body: any = { notificationUrl: params.notificationUrl };
+      if (params.specification) body.specification = params.specification;
+
+      const response = await this.httpClient.post(requestPath, body, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed create_webhook request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'create_webhook', method: 'POST', path: '/bases/{base_id}/webhooks',
+        duration_ms: duration, responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'create_webhook', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'create_webhook', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute create_webhook: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async deleteWebhook(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'delete_webhook', method: 'DELETE', path: '/bases/{base_id}/webhooks/{webhook_id}',
+      paramCount: Object.keys(params || {}).length, paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.webhook_id !== undefined) pathParams.webhook_id = params.webhook_id;
+
+      const path = this.buildPath('/bases/{base_id}/webhooks/{webhook_id}', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting delete_webhook request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.delete(requestPath, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed delete_webhook request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'delete_webhook', method: 'DELETE', path: '/bases/{base_id}/webhooks/{webhook_id}',
+        duration_ms: duration, responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'delete_webhook', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'delete_webhook', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute delete_webhook: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async refreshWebhook(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'refresh_webhook', method: 'POST', path: '/bases/{base_id}/webhooks/{webhook_id}/refresh',
+      paramCount: Object.keys(params || {}).length, paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.webhook_id !== undefined) pathParams.webhook_id = params.webhook_id;
+
+      const path = this.buildPath('/bases/{base_id}/webhooks/{webhook_id}/refresh', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting refresh_webhook request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.post(requestPath, {}, requestConfig);
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed refresh_webhook request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'refresh_webhook', method: 'POST', path: '/bases/{base_id}/webhooks/{webhook_id}/refresh',
+        duration_ms: duration, responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'refresh_webhook', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'refresh_webhook', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute refresh_webhook: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async listWebhookPayloads(params: any, options?: RequestOptions): Promise<any> {
+    const startTime = Date.now();
+    this.logger.info('ENDPOINT_START', 'Endpoint execution started', {
+      endpoint: 'list_webhook_payloads', method: 'GET', path: '/bases/{base_id}/webhooks/{webhook_id}/payloads',
+      paramCount: Object.keys(params || {}).length, paramKeys: Object.keys(params || {})
+    });
+
+    try {
+      const pathParams: Record<string, any> = {};
+      if (params.base_id !== undefined) pathParams.base_id = params.base_id;
+      if (params.webhook_id !== undefined) pathParams.webhook_id = params.webhook_id;
+
+      const queryParams: Record<string, any> = {};
+      if (params.cursor !== undefined) queryParams.cursor = params.cursor;
+
+      const path = this.buildPath('/bases/{base_id}/webhooks/{webhook_id}/payloads', pathParams);
+      const requestPath = path === '/' ? '' : path;
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 0, total: 100, message: `Starting list_webhook_payloads request...` });
+      }
+
+      const requestConfig: any = {};
+      if (options?.signal) requestConfig.signal = options.signal;
+
+      const response = await this.httpClient.get(requestPath, { params: queryParams, ...requestConfig });
+
+      if (options?.onProgress) {
+        await options.onProgress({ progress: 100, total: 100, message: `Completed list_webhook_payloads request` });
+      }
+
+      const duration = Date.now() - startTime;
+      this.logger.info('ENDPOINT_SUCCESS', 'Endpoint execution completed successfully', {
+        endpoint: 'list_webhook_payloads', method: 'GET', path: '/bases/{base_id}/webhooks/{webhook_id}/payloads',
+        duration_ms: duration, responseDataSize: JSON.stringify(response.data).length
+      });
+
+      return { content: [{ type: 'text', text: JSON.stringify(response.data, null, 2) }] };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (axios.isCancel(error)) {
+        this.logger.info('REQUEST_CANCELLED', 'Request was cancelled', { endpoint: 'list_webhook_payloads', duration_ms: duration });
+        throw new Error('Request was cancelled');
+      }
+      this.logger.error('ENDPOINT_ERROR', 'Endpoint execution failed', {
+        endpoint: 'list_webhook_payloads', duration_ms: duration,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : 'unknown'
+      });
+      throw new Error(`Failed to execute list_webhook_payloads: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
 }
