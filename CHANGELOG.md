@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/w-10-m/airtable-mcp/compare/v1.5.0...v1.5.1) (2026-02-27)
+
+
+### Bug Fixes
+
+* resolve empty-string parameter keys causing all query/body params to be ignored ([13f660b](https://github.com/w-10-m/airtable-mcp/commit/13f660b58b8966b454c9a77553cf4db716f71fac))
+
 # [1.5.0](https://github.com/w-10-m/airtable-mcp/compare/v1.4.0...v1.5.0) (2025-12-25)
 
 
