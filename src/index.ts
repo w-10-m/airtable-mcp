@@ -2,6 +2,7 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -9,6 +10,8 @@ import {
   McpError,
   CancelledNotificationSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { createServer } from 'node:http';
+import { randomUUID } from 'node:crypto';
 import { config } from 'dotenv';
 import { loadConfig, validateConfig } from './config.js';
 import { LogShipper } from './services/log-shipper.js';
@@ -177,12 +180,17 @@ class AirtableMcpServer {
     // Handle cancellation notifications
     this.server.setNotificationHandler(CancelledNotificationSchema, async (notification) => {
       const { requestId, reason } = notification.params;
-      
+
+      if (requestId === undefined) {
+        this.logger.debug('CANCELLATION_IGNORED', 'Cancellation ignored - no requestId provided');
+        return;
+      }
+
       this.logger.info('CANCELLATION_RECEIVED', 'Received cancellation notification', {
         requestId,
         reason
       });
-      
+
       // Cancel the request
       const cancelled = this.requestTracker.cancelRequest(requestId, reason);
       
@@ -195,22 +203,14 @@ class AirtableMcpServer {
   }
 
   async run() {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    
-    this.logger.info('SERVER_START', 'MCP server started successfully', {
-      serverName: 'airtable-mcp',
-      transport: 'stdio'
-    });
-    
-    console.error('airtable-mcp MCP server running on stdio');
-    
+    const useHttp = process.env.MCP_TRANSPORT === 'http' || process.argv.includes('--http');
+
     // Handle graceful shutdown for log shipping
     const shutdown = async () => {
       this.logger.info('SERVER_SHUTDOWN', 'MCP server shutting down', {
         serverName: 'airtable-mcp'
       });
-      
+
       // Shutdown request tracking and progress reporting
       if (this.requestTracker) {
         this.requestTracker.shutdown();
@@ -218,17 +218,100 @@ class AirtableMcpServer {
       if (this.progressReporter) {
         this.progressReporter.shutdown();
       }
-      
+
       // Shutdown logging
       if (this.logShipper) {
         await this.logShipper.shutdown();
       }
-      
+
       process.exit(0);
     };
-    
+
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
+
+    if (useHttp) {
+      await this.runHttp();
+    } else {
+      await this.runStdio();
+    }
+  }
+
+  private async runStdio() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+
+    this.logger.info('SERVER_START', 'MCP server started successfully', {
+      serverName: 'airtable-mcp',
+      transport: 'stdio'
+    });
+
+    console.error('airtable-mcp MCP server running on stdio');
+  }
+
+  private async runHttp() {
+    const port = parseInt(process.env.MCP_HTTP_PORT || '3000', 10);
+
+    // Track transports per session for stateful mode
+    const transports = new Map<string, StreamableHTTPServerTransport>();
+
+    const httpServer = createServer(async (req, res) => {
+      const url = new URL(req.url || '/', `http://localhost:${port}`);
+
+      // Health check endpoint
+      if (url.pathname === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', server: 'airtable-mcp' }));
+        return;
+      }
+
+      // MCP endpoint
+      if (url.pathname === '/mcp') {
+        // Check for existing session
+        const sessionId = req.headers['mcp-session-id'] as string | undefined;
+        let transport: StreamableHTTPServerTransport;
+
+        if (sessionId && transports.has(sessionId)) {
+          transport = transports.get(sessionId)!;
+        } else if (!sessionId && req.method === 'POST') {
+          // New session - create transport and connect
+          transport = new StreamableHTTPServerTransport({
+            sessionIdGenerator: () => randomUUID(),
+          });
+
+          transport.onclose = () => {
+            if (transport.sessionId) {
+              transports.delete(transport.sessionId);
+            }
+          };
+
+          await this.server.connect(transport);
+
+          if (transport.sessionId) {
+            transports.set(transport.sessionId, transport);
+          }
+        } else {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Bad Request: No valid session' }));
+          return;
+        }
+
+        await transport.handleRequest(req, res);
+        return;
+      }
+
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not Found' }));
+    });
+
+    httpServer.listen(port, () => {
+      this.logger.info('SERVER_START', 'MCP server started successfully', {
+        serverName: 'airtable-mcp',
+        transport: 'http',
+        port
+      });
+      console.error(`airtable-mcp MCP server running on http://localhost:${port}/mcp`);
+    });
   }
 }
 
