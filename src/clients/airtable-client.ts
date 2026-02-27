@@ -366,20 +366,20 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["offset"] !== undefined) {
+        queryParams["offset"] = params["offset"];
+        extractedParams.push("offset");
       }
-      
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
@@ -648,51 +648,45 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        // Handle array parameters - convert to comma-separated string for Google APIs
-        queryParams[""] = Array.isArray(params[""]) 
-          ? params[""].join(',') 
-          : params[""];
-        extractedParams.push("");
+      if (params["fields"] !== undefined) {
+        queryParams["fields"] = params["fields"];
+        extractedParams.push("fields");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["filterByFormula"] !== undefined) {
+        queryParams["filterByFormula"] = params["filterByFormula"];
+        extractedParams.push("filterByFormula");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["maxRecords"] !== undefined) {
+        queryParams["maxRecords"] = params["maxRecords"];
+        extractedParams.push("maxRecords");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["pageSize"] !== undefined) {
+        queryParams["pageSize"] = params["pageSize"];
+        extractedParams.push("pageSize");
       }
-      if (params[""] !== undefined) {
-        // Handle array parameters - convert to comma-separated string for Google APIs
-        queryParams[""] = Array.isArray(params[""]) 
-          ? params[""].join(',') 
-          : params[""];
-        extractedParams.push("");
+      if (params["sort"] !== undefined) {
+        queryParams["sort"] = params["sort"];
+        extractedParams.push("sort");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["view"] !== undefined) {
+        queryParams["view"] = params["view"];
+        extractedParams.push("view");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["cellFormat"] !== undefined) {
+        queryParams["cellFormat"] = params["cellFormat"];
+        extractedParams.push("cellFormat");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["timeZone"] !== undefined) {
+        queryParams["timeZone"] = params["timeZone"];
+        extractedParams.push("timeZone");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["userLocale"] !== undefined) {
+        queryParams["userLocale"] = params["userLocale"];
+        extractedParams.push("userLocale");
       }
-      if (params[""] !== undefined) {
-        queryParams[""] = params[""];
-        extractedParams.push("");
+      if (params["offset"] !== undefined) {
+        queryParams["offset"] = params["offset"];
+        extractedParams.push("offset");
       }
       
       // Any remaining unprocessed parameters default to body for backward compatibility
@@ -972,28 +966,28 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["records"] !== undefined) {
+        bodyParams["records"] = params["records"];
+        extractedParams.push("records");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["typecast"] !== undefined) {
+        bodyParams["typecast"] = params["typecast"];
+        extractedParams.push("typecast");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/{base_id}/{table_id_or_name}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1119,28 +1113,28 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["records"] !== undefined) {
+        bodyParams["records"] = params["records"];
+        extractedParams.push("records");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["typecast"] !== undefined) {
+        bodyParams["typecast"] = params["typecast"];
+        extractedParams.push("typecast");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/{base_id}/{table_id_or_name}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1266,28 +1260,28 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["records"] !== undefined) {
+        bodyParams["records"] = params["records"];
+        extractedParams.push("records");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["typecast"] !== undefined) {
+        bodyParams["typecast"] = params["typecast"];
+        extractedParams.push("typecast");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/{base_id}/{table_id_or_name}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1413,27 +1407,24 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        // Handle array parameters - convert to comma-separated string for Google APIs
-        queryParams[""] = Array.isArray(params[""]) 
-          ? params[""].join(',') 
-          : params[""];
-        extractedParams.push("");
+      if (params["records"] !== undefined) {
+        queryParams["records"] = params["records"];
+        extractedParams.push("records");
       }
-      
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/{base_id}/{table_id_or_name}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1698,28 +1689,28 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["name"] !== undefined) {
+        bodyParams["name"] = params["name"];
+        extractedParams.push("name");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["description"] !== undefined) {
+        bodyParams["description"] = params["description"];
+        extractedParams.push("description");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["fields"] !== undefined) {
+        bodyParams["fields"] = params["fields"];
+        extractedParams.push("fields");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases/{base_id}/tables', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
@@ -1849,28 +1840,28 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["name"] !== undefined) {
+        bodyParams["name"] = params["name"];
+        extractedParams.push("name");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["description"] !== undefined) {
+        bodyParams["description"] = params["description"];
+        extractedParams.push("description");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases/{base_id}/tables/{table_id}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -1996,36 +1987,36 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["name"] !== undefined) {
+        bodyParams["name"] = params["name"];
+        extractedParams.push("name");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["type"] !== undefined) {
+        bodyParams["type"] = params["type"];
+        extractedParams.push("type");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["description"] !== undefined) {
+        bodyParams["description"] = params["description"];
+        extractedParams.push("description");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["options"] !== undefined) {
+        bodyParams["options"] = params["options"];
+        extractedParams.push("options");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases/{base_id}/tables/{table_id}/fields', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
@@ -2151,28 +2142,28 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["name"] !== undefined) {
+        bodyParams["name"] = params["name"];
+        extractedParams.push("name");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["description"] !== undefined) {
+        bodyParams["description"] = params["description"];
+        extractedParams.push("description");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["options"] !== undefined) {
+        bodyParams["options"] = params["options"];
+        extractedParams.push("options");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases/{base_id}/tables/{table_id}/fields/{field_id}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
@@ -2580,32 +2571,32 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["name"] !== undefined) {
+        bodyParams["name"] = params["name"];
+        extractedParams.push("name");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["type"] !== undefined) {
+        bodyParams["type"] = params["type"];
+        extractedParams.push("type");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["visibleFieldIds"] !== undefined) {
+        bodyParams["visibleFieldIds"] = params["visibleFieldIds"];
+        extractedParams.push("visibleFieldIds");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["fieldOrder"] !== undefined) {
+        bodyParams["fieldOrder"] = params["fieldOrder"];
+        extractedParams.push("fieldOrder");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases/{base_id}/tables/{table_id}/views', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
@@ -2735,32 +2726,32 @@ export class AirtableClient {
       let rawBodyData: any = undefined;
       
       // Separate remaining parameters by location (query vs body)
-      if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+      if (params["name"] !== undefined) {
+        bodyParams["name"] = params["name"];
+        extractedParams.push("name");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["visibleFieldIds"] !== undefined) {
+        bodyParams["visibleFieldIds"] = params["visibleFieldIds"];
+        extractedParams.push("visibleFieldIds");
       }
-            if (params[""] !== undefined) {
-        bodyParams[""] = params[""];
-        extractedParams.push("");
+            if (params["fieldOrder"] !== undefined) {
+        bodyParams["fieldOrder"] = params["fieldOrder"];
+        extractedParams.push("fieldOrder");
       }
-            
+
       // Any remaining unprocessed parameters default to body for backward compatibility
       for (const [key, value] of Object.entries(params)) {
         if (!extractedParams.includes(key)) {
           bodyParams[key] = value;
         }
       }
-      
+
       // Validate required parameters
-      
+
       const path = this.buildPath('/meta/bases/{base_id}/tables/{table_id}/views/{view_id}', pathParams);
       // For GraphQL endpoints that use '/' as the path, use empty string to avoid double slash
       const requestPath = path === '/' ? '' : path;
-      
+
       // Report initial progress if callback provided
       if (options?.onProgress) {
         await options.onProgress({
