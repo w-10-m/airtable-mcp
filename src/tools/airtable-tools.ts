@@ -156,9 +156,50 @@ export class AirtableTools {
             record_id: {
               type: 'string',
               description: 'Record ID to fetch'
+            },
+            fields: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of field names to return (omit for all fields). Filtered client-side.'
             }
           },
           required: ['base_id','table_id_or_name','record_id']
+        }
+      },
+      {
+        name: 'airtable_search_records',
+        description: 'Search records by text across specified fields using case-insensitive matching.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            base_id: {
+              type: 'string',
+              description: 'Base ID containing the table'
+            },
+            table_id_or_name: {
+              type: 'string',
+              description: 'Table ID or name'
+            },
+            search_term: {
+              type: 'string',
+              description: 'Text to search for (case-insensitive)'
+            },
+            field_names: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Field names to search across'
+            },
+            maxRecords: {
+              type: 'number',
+              description: 'Maximum records to return (max 100)'
+            },
+            fields: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Field names to include in results (omit for all)'
+            }
+          },
+          required: ['base_id', 'table_id_or_name', 'search_term', 'field_names']
         }
       },
       {
@@ -538,6 +579,7 @@ export class AirtableTools {
       'airtable_get_base_schema',
       'airtable_list_records',
       'airtable_get_record',
+      'airtable_search_records',
       'airtable_create_records',
       'airtable_update_records',
       'airtable_replace_records',
@@ -701,7 +743,20 @@ export class AirtableTools {
           }
           
           result = await this.client.getRecord(args, requestOptions);
-          
+
+          // Client-side field filtering (Airtable get_record API doesn't support fields param)
+          if (args.fields && Array.isArray(args.fields) && result?.content?.[0]?.text) {
+            const parsed = JSON.parse(result.content[0].text);
+            if (parsed.fields) {
+              const filtered: Record<string, any> = {};
+              for (const f of args.fields) {
+                if (f in parsed.fields) filtered[f] = parsed.fields[f];
+              }
+              parsed.fields = filtered;
+              result.content[0].text = JSON.stringify(parsed, null, 2);
+            }
+          }
+
           // Report completion
           if (context?.progressToken && progressReporter) {
             await progressReporter.report(context.progressToken, {
@@ -711,6 +766,52 @@ export class AirtableTools {
             });
           }
           break;
+        case 'airtable_search_records': {
+          this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
+            tool: 'airtable_search_records',
+            clientMethod: 'listRecords',
+            hasAbortSignal: !!requestOptions.signal,
+            hasProgressCallback: !!requestOptions.onProgress
+          });
+
+          // Report initial progress
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 0,
+              total: 100,
+              message: `Starting search_records operation...`
+            });
+          }
+
+          const searchTerm = args.search_term.replace(/"/g, '\\"');
+          const fieldNames = args.field_names as string[];
+          const searchClauses = fieldNames.map((f: string) =>
+            `SEARCH(LOWER("${searchTerm}"), LOWER({${f}}))`
+          );
+          const filterByFormula = searchClauses.length === 1
+            ? searchClauses[0]
+            : `OR(${searchClauses.join(', ')})`;
+
+          const searchArgs: any = {
+            base_id: args.base_id,
+            table_id_or_name: args.table_id_or_name,
+            filterByFormula,
+            ...(args.maxRecords && { maxRecords: args.maxRecords }),
+            ...(args.fields && { fields: args.fields })
+          };
+
+          result = await this.client.listRecords(searchArgs, requestOptions);
+
+          // Report completion
+          if (context?.progressToken && progressReporter) {
+            await progressReporter.report(context.progressToken, {
+              progress: 100,
+              total: 100,
+              message: `Completed search_records operation`
+            });
+          }
+          break;
+        }
         case 'airtable_create_records':
           this.logger.debug('TOOL_EXECUTE', 'Calling client method', {
             tool: 'airtable_create_records',

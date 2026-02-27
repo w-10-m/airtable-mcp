@@ -36,6 +36,7 @@ describe('JSON-RPC Protocol', () => {
         'airtable_delete_view',
         'airtable_get_base_schema',
         'airtable_get_record',
+        'airtable_search_records',
         'airtable_get_table',
         'airtable_get_view',
         'airtable_list_bases',
